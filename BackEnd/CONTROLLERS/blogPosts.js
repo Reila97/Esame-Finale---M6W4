@@ -8,6 +8,10 @@ export async function findAll(req, res) {
     try {
         const { page, limit } = req.query;
         const blogPostsQuery = BlogPost.find()
+            .populate("author")
+            // Popola l'autore del Post
+            .populate("comments.author");
+        // Popola l'autore di ogni commento
 
         if (page && limit) {
             authorsQuery.skip((page - 1) * limit).limit(limit)
@@ -31,6 +35,8 @@ export async function findId(req, res) {
         }
 
         const blogPost = await BlogPost.findById(id)
+            .populate("author")
+            .populate("comments.author");
 
         if (!blogPost) {
             return res.status(404).json({ message: 'id valido ma non esistente' })
@@ -85,7 +91,7 @@ export async function update(req, res) {
         }
 
         const { category, title, cover, readTime, author, content } = req.body
-        const uptadedBlogPost = await BlogPost.findByIdAndUpdate(id, { category, title, cover, readTime, author, content }, { returnDocument: 'after' })
+        const uptadedBlogPost = await BlogPost.findByIdAndUpdate(id, { category, title, cover, readTime, author, content }, { returnDocument: 'after' }).populate("author");
 
         if (!uptadedBlogPost) {
             return res.status(404).json({ message: ' blog post non trovato' })
@@ -126,7 +132,7 @@ export async function updateCover(req, res) {
         res.status(200).json(blogPost)
 
     } catch (error) {
-        
+
         if (req.file) {
             try {
                 await cloudinary.uploader.destroy(req.file.filename);

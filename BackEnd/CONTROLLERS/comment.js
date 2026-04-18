@@ -13,7 +13,7 @@ export async function findAll(req, res) {
             return res.status(400).json({ message: 'id blog post non valido' })
         }
         // cerco il blog post che contiene i commenti
-        const post = await BlogPost.findById(blogPostId);
+        const post = await BlogPost.findById(blogPostId).populate("comments.author");;
 
         // controllo che esista
         if (!post) {
@@ -73,7 +73,8 @@ export async function createNew(req, res) {
         }
 
         //recupero i dati dello chema del commento
-        const { text, author } = req.body;
+        const {text} = req.body;
+        const authorId = req.user ? req.user.id : req.body.author;
         // cerco il padre nel database
         const post = await BlogPost.findById(blogPostId);
         if (!post) {
@@ -81,9 +82,11 @@ export async function createNew(req, res) {
         }
 
         //aggiungo il commento nell'array dei commenti
-        post.comments.push({ text, author });
+        post.comments.push({ text, author: authorId});
         //salvo e restituisco(201)
         await post.save()
+
+        const updatedPost = await BlogPost.findById(blogPostId).populate("comments.author");
         res.status(201).json(post.comments[post.comments.length - 1])
     }
     catch (error) {
