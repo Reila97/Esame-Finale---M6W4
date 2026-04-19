@@ -11,10 +11,16 @@ import {
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import UpdateBtn from "../Button/UpdateBtn/UpdateBtn.jsx";
+import DeleteButton from "../Button/DeleteBtn/DeleteBtn.jsx";
 
 function AuthorProfile() {
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Inizializziamo lo stato provando a leggere dal localStorage
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem("userData");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+  const [isLoading, setIsLoading] = useState(!user); // Carica solo se non abbiamo dati salvati
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,25 +32,19 @@ function AuthorProfile() {
 
     const fetchProfile = async () => {
       try {
-        setIsLoading(true);
         const decoded = jwtDecode(token);
-        // Usiamo l'ID del token per fare una chiamata GET specifica per l'autore
-        // Assicurati che l'URL sia corretto per il tuo backend (es. /authors/me o /authors/ID)
         const res = await fetch(`http://localhost:3001/authors/${decoded.id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         if (res.ok) {
           const fullUserData = await res.json();
-          setUser(fullUserData); // Ora 'user' contiene tutto ciò che è nel DB
-        } else {
-          throw new Error("Errore nel recupero dati");
+          setUser(fullUserData);
+          // Salviamo i dati aggiornati nel localStorage
+          localStorage.setItem("userData", JSON.stringify(fullUserData));
         }
       } catch (error) {
         console.error("Errore profilo:", error);
-        navigate("/login");
       } finally {
         setIsLoading(false);
       }
@@ -53,90 +53,66 @@ function AuthorProfile() {
     fetchProfile();
   }, [navigate]);
 
-  if (isLoading) {
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userData");
+    navigate("/login");
+  };
+
+  if (isLoading && !user)
     return (
-      <Container className="text-center mt-5">
-        <Spinner animation="border" variant="primary" />
-      </Container>
+      <div className="text-center mt-5">
+        <Spinner animation="border" />
+      </div>
     );
-  }
 
   return (
     <Container className="mt-5">
+      <div className="d-flex gap-2 mb-3">
+        <UpdateBtn type="author" id={user?._id} />
+        <DeleteButton
+          type="author"
+          id={user?._id}
+          onDeleteSuccess={handleLogout}
+        />
+      </div>
+
       <Row className="justify-content-center">
         <Col md={8}>
           <Card className="shadow border-0">
-            {/* Header del Profilo con Background Color */}
             <div
               className="bg-primary rounded-top"
               style={{ height: "100px" }}
             ></div>
-
             <Card.Body className="text-center" style={{ marginTop: "-50px" }}>
-              {/* Avatar Circolare */}
               <Image
                 src={user?.avatar || "https://placehold.co/150x150?text=User"}
                 roundedCircle
                 thumbnail
                 className="shadow"
                 style={{ width: "120px", height: "120px", objectFit: "cover" }}
-                referrerPolicy="no-referrer"
               />
-
               <h2 className="mt-3 text-capitalize">
                 {user?.name} {user?.surname}
               </h2>
-              <p className="text-muted">Autore & Contributor</p>
-
               <hr />
-
               <Row className="text-start mt-4">
                 <Col md={6}>
                   <ListGroup variant="flush">
                     <ListGroup.Item className="border-0">
-                      <strong>Email:</strong> <br />
-                      <span className="text-secondary">{user?.email}</span>
-                    </ListGroup.Item>
-                    <ListGroup.Item className="border-0">
-                      <strong>Data di Nascita:</strong> <br />
-                      <span className="text-secondary">
-                        {user?.birthDate
-                          ? new Date(user.birthDate).toLocaleDateString()
-                          : "Non specificata"}
-                      </span>
-                    </ListGroup.Item>
-                  </ListGroup>
-                </Col>
-                <Col md={6}>
-                  <ListGroup variant="flush">
-                    <ListGroup.Item className="border-0">
-                      <strong>Account ID:</strong> <br />
-                      <span className="text-secondary small">
-                        {user?.id || user?._id}
-                      </span>
-                    </ListGroup.Item>
-                    <ListGroup.Item className="border-0">
-                      <strong>Ruolo:</strong> <br />
-                      <span className="badge bg-success">Attivo</span>
+                      <strong>Email:</strong> <br /> {user?.email}
                     </ListGroup.Item>
                   </ListGroup>
                 </Col>
               </Row>
-
               <div className="d-flex justify-content-center gap-3 mt-4">
                 <Button
                   variant="outline-primary"
                   onClick={() => navigate("/new-post")}
                 >
-                  Scrivi un nuovo Post
+                  Nuovo Post
                 </Button>
-                <Button
-                  variant="danger"
-                  onClick={() => {
-                    localStorage.removeItem("token");
-                    navigate("/login");
-                  }}
-                >
+                <Button variant="danger" onClick={handleLogout}>
                   Logout
                 </Button>
               </div>

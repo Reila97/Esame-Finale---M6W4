@@ -1,12 +1,12 @@
 import React from "react";
-import Comment from "./Comment.jsx";
 import { ListGroup } from "react-bootstrap";
+import Comment from "./Comment.jsx";
 
-function AllComment({ commentList }) {
-  // 1. Messaggio di fallback se non ci sono commenti
+function AllComment({ commentList, postId }) {
+  // Messaggio di fallback se non ci sono commenti
   if (!commentList || commentList.length === 0) {
     return (
-      <p className="text-muted small ps-2 italic">
+      <p className="text-muted small ps-2 mt-2 fst-italic">
         Ancora nessun commento. Sii il primo!
       </p>
     );
@@ -14,11 +14,13 @@ function AllComment({ commentList }) {
 
   return (
     <div className="mt-2">
-      {/* 2. Usiamo ListGroup con flush per rimuovere i bordi esterni */}
       <ListGroup variant="flush">
         {commentList.map((c) => (
-          // 3. È fondamentale passare la key qui sul componente che cicla
-          <Comment key={c._id || Math.random()} comment={c} />
+          <Comment 
+            key={c._id || Math.random()} 
+            comment={c} 
+            postId={postId}
+          />          
         ))}
       </ListGroup>
     </div>

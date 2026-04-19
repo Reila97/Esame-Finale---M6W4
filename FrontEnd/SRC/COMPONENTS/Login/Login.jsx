@@ -58,8 +58,8 @@ function Login() {
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
       const token = credentialResponse.credential;
-
-      const res = await fetch("http://localhost:3001/auth/login/google", {
+//TODO problema con login google (62)
+      const res = await fetch("http://localhost:3001/auth/google", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token }),

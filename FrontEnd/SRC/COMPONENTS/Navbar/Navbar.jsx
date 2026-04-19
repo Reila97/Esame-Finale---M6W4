@@ -71,7 +71,7 @@ function MyNav() {
                 title={
                   <div className="d-inline-flex align-items-center">
                     <Image
-                      src={user.avatar || "https://placehold.co/30x30"}
+                      src={user.avatar}
                       roundedCircle
                       width="30"
                       height="30"

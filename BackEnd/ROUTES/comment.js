@@ -9,7 +9,7 @@ commentRouter.get('/blogPosts/:blogPostId/comments', findAll )
 commentRouter.get('/blogPosts/:blogPostId/comments/:id', findId) 
 
 commentRouter.post('/blogPosts/:blogPostId/comments', authentication, createNew) 
-commentRouter.delete('/blogPosts/:blogPostId/comments/:id', authentication, canc) 
+commentRouter.delete('/blogPosts/:blogPostId/comment/:id', authentication, canc) 
 commentRouter.put('/blogPosts/:blogPostId/comments/:id', authentication, update) 
 
 export default commentRouter
