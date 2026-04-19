@@ -13,7 +13,7 @@ export async function findAll(req, res) {
             return res.status(400).json({ message: 'id blog post non valido' })
         }
         // cerco il blog post che contiene i commenti
-        const post = await BlogPost.findById(blogPostId).populate("comments.author");;
+        const post = await BlogPost.findById(blogPostId).populate("comments.author", "nome cognome avatar email");;
 
         // controllo che esista
         if (!post) {
@@ -73,8 +73,18 @@ export async function createNew(req, res) {
         }
 
         //recupero i dati dello chema del commento
-        const {text} = req.body;
-        const authorId = req.user ? req.user.id : req.body.author;
+        const { text } = req.body;
+
+
+        // CORREZIONE: Usiamo req.authUser (caricato dal tuo middleware)
+        // Se non c'è authUser, l'autore viene preso dal body (opzionale)
+        const authorId = req.authUser ? req.authUser._id : req.body.author;
+
+        if (!authorId) {
+            return res.status(401).json({ message: "Devi essere loggato per commentare" });
+        }
+
+
         // cerco il padre nel database
         const post = await BlogPost.findById(blogPostId);
         if (!post) {
@@ -82,11 +92,16 @@ export async function createNew(req, res) {
         }
 
         //aggiungo il commento nell'array dei commenti
-        post.comments.push({ text, author: authorId});
+        const newComment = { text, author: authorId };
+        post.comments.push(newComment);
         //salvo e restituisco(201)
         await post.save()
 
+        // FONDAMENTALE: Ricarichiamo il post popolando l'autore del nuovo commento
+        // altrimenti il frontend riceve solo un ID stringa e non vede i dati
         const updatedPost = await BlogPost.findById(blogPostId).populate("comments.author");
+
+        // Restituiamo l'ultimo commento (quello appena creato) completo di dati autore
         res.status(201).json(post.comments[post.comments.length - 1])
     }
     catch (error) {
@@ -100,10 +115,10 @@ export async function canc(req, res) {
         //prendo e valido id
         const { blogPostId, id } = req.params;
         if (!mongoose.Types.ObjectId.isValid(blogPostId)) {
-            return res.status(400).json({ message:'id blog post non valido'})
+            return res.status(400).json({ message: 'id blog post non valido' })
         }
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ message:'id commento non valido'})
+            return res.status(400).json({ message: 'id commento non valido' })
         }
 
         // cerco post e commento
@@ -132,30 +147,36 @@ export async function update(req, res) {
     try {
         //recupero id e dati
         const { blogPostId, id } = req.params;
-        const { text, author } = req.body
+        const { text } = req.body
         if (!mongoose.Types.ObjectId.isValid(blogPostId)) {
-            return res.status(400).json({ message:'id blogpost non valido'})
+            return res.status(400).json({ message: 'id blogpost non valido' })
         }
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ message:'id commento non valido'})
+            return res.status(400).json({ message: 'id commento non valido' })
         }
 
         //cerco il post e prendo il commento
         const blogPost = await BlogPost.findById(blogPostId)
         if (!blogPost) {
-            return res.status(404).json({ message:'id blog post valido ma non esistente'})
+            return res.status(404).json({ message: 'id blog post valido ma non esistente' })
         }
 
         const comment = blogPost.comments.id(id)
         if (!comment) {
-            return res.status(404).json({ message:'id commento valido ma non esistente'})
+            return res.status(404).json({ message: 'id commento valido ma non esistente' })
+        }
+
+        // Check sicurezza: solo l'autore può modificare (opzionale ma consigliato)
+        if (comment.author.toString() !== req.authUser._id.toString()) {
+            return res.status(403).json({ message: "Non sei autorizzato" });
         }
 
         //modifico i campo salvo e restutuisco(200)
         comment.text = text;
-        comment.author = author;
         await blogPost.save()
-        res.status(200).json(comment)
+        // Restituiamo il commento aggiornato popolato
+        const finalPost = await BlogPost.findById(blogPostId).populate("comments.author");
+        res.status(200).json(finalPost.comments.id(id));
 
     }
     catch (error) {

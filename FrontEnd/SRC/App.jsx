@@ -1,6 +1,6 @@
 import "./App.css";
 import React from "react";
-import { BrowserRouter, Route, Router, Routes } from "react-router";
+import { BrowserRouter, Route, Router, Routes } from "react-router-dom";
 import { Container } from "react-bootstrap";
 
 import MyNav from "./COMPONENTS/Navbar/Navbar.jsx";
@@ -9,11 +9,11 @@ import AllPost from "./COMPONENTS/BlogPost/AllPost.jsx";
 import AllAuthors from "./COMPONENTS/Author/AllAuthors.jsx";
 import Login from "./COMPONENTS/Login/Login.jsx";
 import AuthorProfile from "./COMPONENTS/Author/AuthorProfile.jsx";
-import UpdateAuthor from "./COMPONENTS/Author/UpdateAuthor.jsx"
+import UpdateAuthor from "./COMPONENTS/Author/UpdateAuthor.jsx";
 import UpdateBlogPost from "./COMPONENTS/BlogPost/UpdateBlogPost.jsx";
 import UpdateComment from "./COMPONENTS/Comment/UpdateComment.jsx";
 import NewBlogPost from "./COMPONENTS/BlogPost/NewBlogPost.jsx";
-import NewComment from "./COMPONENTS/Comment/NewComment.jsx"
+
 
 function App() {
   return (
@@ -35,12 +35,15 @@ function App() {
             element={<UpdateComment />}
           />
 
-          {/* //TODO ROTTE PER NEW */}
-          <Route path="/new-post" 
-          element={<NewBlogPost/>} />
-           <Route path="/new-comment" 
-          element={<NewComment/>} />
+          <Route path="/new-post" element={<NewBlogPost />} />
 
+          {/* Rotta di fallback per 404 (Opzionale) */}
+          <Route
+            path="*"
+            element={
+              <div className="text-center mt-5">404 - Pagina non trovata</div>
+            }
+          />
         </Routes>
       </Container>
     </>

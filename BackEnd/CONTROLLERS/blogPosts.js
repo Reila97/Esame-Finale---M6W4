@@ -14,7 +14,7 @@ export async function findAll(req, res) {
         // Popola l'autore di ogni commento
 
         if (page && limit) {
-            authorsQuery.skip((page - 1) * limit).limit(limit)
+            blogPostsQuery.skip((page - 1) * limit).limit(limit)
         }
 
         const blogPosts = await blogPostsQuery;

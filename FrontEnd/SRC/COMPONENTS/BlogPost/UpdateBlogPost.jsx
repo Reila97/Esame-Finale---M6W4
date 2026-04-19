@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Form, Button, Container, Card, Spinner, Alert, Row, Col } from "react-bootstrap";
+import {
+  Form,
+  Button,
+  Container,
+  Card,
+  Spinner,
+  Alert,
+  Row,
+  Col,
+} from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
+import UniversalUploader from "../Button/UniversalUploader";
 
 function UpdateBlogPost() {
   const { id } = useParams();
@@ -11,9 +21,10 @@ function UpdateBlogPost() {
     title: "",
     cover: "",
     content: "",
-    readTime: { value: 0, unit: "minutes" }
+    readTime: { value: 0, unit: "minutes" },
   });
 
+  const [post, setPost] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState(null);
@@ -23,7 +34,7 @@ function UpdateBlogPost() {
       try {
         const token = localStorage.getItem("token");
         const res = await fetch(`http://localhost:3001/blogPosts/${id}`, {
-          headers: { "Authorization": `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         if (!res.ok) throw new Error("Errore nel caricamento del post");
@@ -50,8 +61,8 @@ function UpdateBlogPost() {
       ...formData,
       readTime: {
         ...formData.readTime,
-        [name]: name === "value" ? Number(value) : value
-      }
+        [name]: name === "value" ? Number(value) : value,
+      },
     });
   };
 
@@ -63,10 +74,10 @@ function UpdateBlogPost() {
       const res = await fetch(`http://localhost:3001/blogPosts/${id}`, {
         method: "PUT",
         headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
 
       if (res.ok) {
@@ -82,7 +93,12 @@ function UpdateBlogPost() {
     }
   };
 
-  if (isLoading) return <Container className="text-center mt-5"><Spinner animation="border" /></Container>;
+  if (isLoading)
+    return (
+      <Container className="text-center mt-5">
+        <Spinner animation="border" />
+      </Container>
+    );
 
   return (
     <Container className="mt-5 pb-5">
@@ -90,23 +106,52 @@ function UpdateBlogPost() {
         <h2 className="mb-4">Modifica Blog Post</h2>
         {error && <Alert variant="danger">{error}</Alert>}
         
+
+        <UniversalUploader
+          endpoint={`http://localhost:3001/blogPosts/${id}/cover`}
+          fieldName="cover"
+          onUploadSuccess={(newUrl) => {
+            // IMPORTANTE: aggiorna formData così il Form vede il nuovo URL
+            setFormData({ ...formData, cover: newUrl });
+
+            // Se vuoi tenere setPost per altri motivi, ok, ma formData è fondamentale
+            if (setPost) setPost({ ...post, cover: newUrl });
+          }}
+        />
+
+        
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
             <Form.Label>Titolo</Form.Label>
-            <Form.Control name="title" value={formData.title} onChange={handleChange} required />
+            <Form.Control
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              required
+            />
           </Form.Group>
 
           <Row>
             <Col md={6}>
               <Form.Group className="mb-3">
                 <Form.Label>Categoria</Form.Label>
-                <Form.Control name="category" value={formData.category} onChange={handleChange} required />
+                <Form.Control
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  required
+                />
               </Form.Group>
             </Col>
             <Col md={6}>
               <Form.Group className="mb-3">
                 <Form.Label>URL Copertina</Form.Label>
-                <Form.Control name="cover" value={formData.cover} onChange={handleChange} required />
+                <Form.Control
+                  name="cover"
+                  value={formData.cover}
+                  onChange={handleChange}
+                  required
+                />
               </Form.Group>
             </Col>
           </Row>
@@ -115,13 +160,22 @@ function UpdateBlogPost() {
             <Col xs={6} md={3}>
               <Form.Group>
                 <Form.Label>Tempo lettura</Form.Label>
-                <Form.Control type="number" name="value" value={formData.readTime.value} onChange={handleReadTimeChange} />
+                <Form.Control
+                  type="number"
+                  name="value"
+                  value={formData.readTime.value}
+                  onChange={handleReadTimeChange}
+                />
               </Form.Group>
             </Col>
             <Col xs={6} md={3}>
               <Form.Group>
                 <Form.Label>Unità</Form.Label>
-                <Form.Select name="unit" value={formData.readTime.unit} onChange={handleReadTimeChange}>
+                <Form.Select
+                  name="unit"
+                  value={formData.readTime.unit}
+                  onChange={handleReadTimeChange}
+                >
                   <option value="minutes">minuti</option>
                   <option value="hours">ore</option>
                 </Form.Select>
@@ -131,14 +185,23 @@ function UpdateBlogPost() {
 
           <Form.Group className="mb-4">
             <Form.Label>Contenuto</Form.Label>
-            <Form.Control as="textarea" rows={10} name="content" value={formData.content} onChange={handleChange} required />
+            <Form.Control
+              as="textarea"
+              rows={10}
+              name="content"
+              value={formData.content}
+              onChange={handleChange}
+              required
+            />
           </Form.Group>
 
           <div className="d-flex gap-2">
             <Button variant="primary" type="submit" disabled={isUpdating}>
               {isUpdating ? <Spinner size="sm" /> : "Salva Modifiche"}
             </Button>
-            <Button variant="outline-secondary" onClick={() => navigate("/")}>Annulla</Button>
+            <Button variant="outline-secondary" onClick={() => navigate("/")}>
+              Annulla
+            </Button>
           </div>
         </Form>
       </Card>
